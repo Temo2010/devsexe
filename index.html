@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Devs.exe</title>
+  <style>
+    :root {
+      --black: #050505;
+      --white: #ffffff;
+      --soft: #f4f4f4;
+      --muted: #a5a5a5;
+      --line: rgba(255, 255, 255, 0.18);
+      --dark-line: rgba(0, 0, 0, 0.16);
+      --accent: #12f28a;
+      --max: 1160px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 72px;
+    }
+
+    body {
+      margin: 0;
+      color: var(--white);
+      background: var(--black);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.5;
+    }
+
+    body.is-loading {
+      overflow: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    .page-shell {
+      min-height: 100vh;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        var(--black);
+      background-size: 72px 72px;
+      animation: gridDrift 28s linear infinite;
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 900ms cubic-bezier(0.19, 1, 0.22, 1), transform 900ms cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    body.site-ready .page-shell {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .site-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        var(--black);
+      background-size: 56px 56px;
+      color: var(--white);
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 620ms cubic-bezier(0.76, 0, 0.24, 1), visibility 620ms step-end;
+    }
+
+    body.loader-done .site-loader {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-card {
+      width: min(520px, 100%);
+      border: 2px solid var(--white);
+      background: #080808;
+      box-shadow: 16px 16px 0 var(--white);
+    }
+
+    .loader-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 48px;
+      padding: 0 16px;
+      border-bottom: 2px solid var(--white);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .loader-status {
+      color: var(--accent);
+      animation: loaderBlink 700ms steps(2, end) infinite;
+    }
+
+    .loader-body {
+      padding: clamp(24px, 6vw, 42px);
+    }
+
+    .loader-logo {
+      display: inline-grid;
+      place-items: center;
+      width: 78px;
+      height: 78px;
+      margin-bottom: 26px;
+      border: 4px solid var(--white);
+      font-size: 22px;
+      font-weight: 900;
+      animation: loaderPulse 1100ms cubic-bezier(0.19, 1, 0.22, 1) infinite alternate;
+    }
+
+    .loader-title {
+      margin: 0;
+      font-size: clamp(32px, 9vw, 64px);
+      line-height: 0.9;
+      text-transform: uppercase;
+    }
+
+    .loader-text {
+      margin: 16px 0 28px;
+      color: #d8d8d8;
+      font: 800 13px/1.6 "Courier New", monospace;
+      text-transform: uppercase;
+    }
+
+    .loader-bar {
+      height: 16px;
+      border: 2px solid var(--white);
+      overflow: hidden;
+      background: var(--black);
+    }
+
+    .loader-bar span {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: var(--white);
+      transform-origin: left;
+      animation: loaderBar 1700ms cubic-bezier(0.76, 0, 0.24, 1) forwards;
+    }
+
+    main > section {
+      min-height: 100svh;
+      display: flex;
+      align-items: center;
+    }
+
+    .nav {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 20;
+      border-bottom: 1px solid var(--line);
+      background: rgba(5, 5, 5, 0.82);
+      backdrop-filter: blur(18px);
+      transform: translateY(-100%);
+      animation: navDrop 760ms cubic-bezier(0.19, 1, 0.22, 1) 460ms forwards;
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    .nav.is-scrolled {
+      background: rgba(5, 5, 5, 0.94);
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .nav-inner {
+      width: min(var(--max), calc(100% - 32px));
+      min-height: 72px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 3px solid var(--white);
+      font-size: 18px;
+      font-weight: 900;
+      transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+    }
+
+    .brand:hover .brand-mark {
+      background: var(--white);
+      color: var(--black);
+      transform: rotate(-2deg);
+    }
+
+    .brand span {
+      font-size: 14px;
+    }
+
+    .brand-name {
+      display: inline-flex;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .nav-links a:hover {
+      color: var(--white);
+    }
+
+    .nav-cta,
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 22px;
+      border: 2px solid currentColor;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      transition: transform 180ms ease, background 180ms ease, color 180ms ease;
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    .nav-cta:hover,
+    .button:hover {
+      transform: translateY(-2px);
+    }
+
+    .nav-cta::before,
+    .button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: var(--white);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 260ms cubic-bezier(0.76, 0, 0.24, 1);
+    }
+
+    .nav-cta:hover::before,
+    .button:hover::before {
+      transform: scaleX(1);
+    }
+
+    .nav-cta:hover {
+      color: var(--black);
+    }
+
+    .button.primary {
+      background: var(--white);
+      color: var(--black);
+      border-color: var(--white);
+    }
+
+    .button.primary::before {
+      background: var(--black);
+    }
+
+    .button.primary:hover {
+      color: var(--white);
+    }
+
+    .button.secondary {
+      color: var(--white);
+    }
+
+    .button.secondary:hover {
+      color: var(--black);
+    }
+
+    .hero {
+      width: min(var(--max), calc(100% - 32px));
+      min-height: 100svh;
+      margin: 0 auto;
+      padding: 128px 0 58px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(310px, 0.78fr);
+      align-items: center;
+      gap: 56px;
+    }
+
+    .hero-copy {
+      max-width: 760px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0;
+      transform: translateY(16px);
+      animation: riseIn 700ms cubic-bezier(0.19, 1, 0.22, 1) 680ms forwards;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 48px;
+      height: 3px;
+      background: var(--white);
+      transform: scaleX(0);
+      transform-origin: left;
+      animation: lineIn 650ms cubic-bezier(0.19, 1, 0.22, 1) 900ms forwards;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 820px;
+      font-size: clamp(58px, 10vw, 138px);
+      line-height: 0.85;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: riseIn 820ms cubic-bezier(0.19, 1, 0.22, 1) 820ms forwards;
+    }
+
+    .outlined {
+      display: block;
+      color: transparent;
+      -webkit-text-stroke: 2px var(--white);
+      text-stroke: 2px var(--white);
+    }
+
+    .hero-text {
+      max-width: 600px;
+      margin: 28px 0 0;
+      color: #d7d7d7;
+      font-size: clamp(17px, 2vw, 22px);
+      opacity: 0;
+      transform: translateY(22px);
+      animation: riseIn 760ms cubic-bezier(0.19, 1, 0.22, 1) 980ms forwards;
+    }
+
+    .hero-note {
+      max-width: 520px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      opacity: 0;
+      transform: translateY(18px);
+      animation: riseIn 720ms cubic-bezier(0.19, 1, 0.22, 1) 1060ms forwards;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 34px;
+      opacity: 0;
+      transform: translateY(22px);
+      animation: riseIn 760ms cubic-bezier(0.19, 1, 0.22, 1) 1120ms forwards;
+    }
+
+    .logo-window {
+      position: relative;
+      border: 8px solid var(--white);
+      background: var(--white);
+      color: var(--black);
+      box-shadow: 22px 22px 0 var(--black), 22px 22px 0 2px var(--white);
+      opacity: 0;
+      transform: translateY(34px) rotate(1.5deg);
+      animation: windowIn 940ms cubic-bezier(0.19, 1, 0.22, 1) 860ms forwards;
+      transition: transform 320ms ease, box-shadow 320ms ease;
+      will-change: transform;
+    }
+
+    .logo-window:hover {
+      transform: translateY(-8px) rotate(0deg);
+      box-shadow: 12px 12px 0 var(--black), 12px 12px 0 2px var(--white);
+    }
+
+    .window-controls {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: var(--black);
+      font-weight: 900;
+    }
+
+    .window-controls span {
+      transition: transform 180ms ease;
+    }
+
+    .logo-window:hover .window-controls span {
+      transform: translateY(-2px);
+    }
+
+    .window-controls span {
+      width: 28px;
+      height: 20px;
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .window-controls .box {
+      width: 26px;
+      height: 26px;
+      border: 1px solid var(--black);
+    }
+
+    .logo-window img {
+      width: 100%;
+      aspect-ratio: 1.25 / 1;
+      object-fit: contain;
+      padding: 54px 24px 28px;
+    }
+
+    .logo-caption {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 18px;
+      border-top: 3px solid var(--black);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero-strip {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border: 1px solid var(--line);
+      opacity: 0;
+      transform: translateY(26px);
+      animation: riseIn 820ms cubic-bezier(0.19, 1, 0.22, 1) 1280ms forwards;
+    }
+
+    body:not(.site-ready) .nav,
+    body:not(.site-ready) .eyebrow,
+    body:not(.site-ready) h1,
+    body:not(.site-ready) .hero-text,
+    body:not(.site-ready) .hero-note,
+    body:not(.site-ready) .hero-actions,
+    body:not(.site-ready) .logo-window,
+    body:not(.site-ready) .hero-strip,
+    body:not(.site-ready) .eyebrow::before {
+      animation: none;
+    }
+
+    body.site-ready .nav {
+      animation: navDrop 760ms cubic-bezier(0.19, 1, 0.22, 1) 120ms forwards;
+    }
+
+    body.site-ready .eyebrow {
+      animation: riseIn 700ms cubic-bezier(0.19, 1, 0.22, 1) 260ms forwards;
+    }
+
+    body.site-ready .eyebrow::before {
+      animation: lineIn 650ms cubic-bezier(0.19, 1, 0.22, 1) 480ms forwards;
+    }
+
+    body.site-ready h1 {
+      animation: riseIn 820ms cubic-bezier(0.19, 1, 0.22, 1) 400ms forwards;
+    }
+
+    body.site-ready .hero-text {
+      animation: riseIn 760ms cubic-bezier(0.19, 1, 0.22, 1) 560ms forwards;
+    }
+
+    body.site-ready .hero-note {
+      animation: riseIn 720ms cubic-bezier(0.19, 1, 0.22, 1) 640ms forwards;
+    }
+
+    body.site-ready .hero-actions {
+      animation: riseIn 760ms cubic-bezier(0.19, 1, 0.22, 1) 700ms forwards;
+    }
+
+    body.site-ready .logo-window {
+      animation: windowIn 940ms cubic-bezier(0.19, 1, 0.22, 1) 480ms forwards;
+    }
+
+    body.site-ready .hero-strip {
+      animation: riseIn 820ms cubic-bezier(0.19, 1, 0.22, 1) 860ms forwards;
+    }
+
+    .stat {
+      min-height: 108px;
+      padding: 22px;
+      border-right: 1px solid var(--line);
+      transition: background 180ms ease, transform 180ms ease;
+    }
+
+    .stat:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-4px);
+    }
+
+    .stat:last-child {
+      border-right: 0;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: clamp(24px, 4vw, 42px);
+      line-height: 1;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    section {
+      padding: 96px 0;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(34px);
+      transition: opacity 760ms cubic-bezier(0.19, 1, 0.22, 1), transform 760ms cubic-bezier(0.19, 1, 0.22, 1);
+      transition-delay: var(--delay, 0ms);
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .section-inner {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .section-heading {
+      display: grid;
+      grid-template-columns: minmax(0, 0.8fr) minmax(280px, 0.55fr);
+      gap: 40px;
+      align-items: end;
+      margin-bottom: 42px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(38px, 6vw, 82px);
+      line-height: 0.9;
+      text-transform: uppercase;
+    }
+
+    .section-heading p {
+      margin: 0;
+      color: #cfcfcf;
+      font-size: 18px;
+    }
+
+    .services {
+      background: var(--white);
+      color: var(--black);
+      position: relative;
+    }
+
+    .services::before,
+    .projects::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 16px;
+      background: repeating-linear-gradient(90deg, var(--black) 0 18px, var(--white) 18px 36px);
+    }
+
+    .services .section-heading p {
+      color: #333;
+    }
+
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 2px solid var(--black);
+      border-left: 2px solid var(--black);
+    }
+
+    .service {
+      min-height: 270px;
+      padding: 28px;
+      border-right: 2px solid var(--black);
+      border-bottom: 2px solid var(--black);
+      transition: background 220ms ease, color 220ms ease, transform 220ms ease;
+    }
+
+    .service:hover {
+      background: var(--black);
+      color: var(--white);
+      transform: translateY(-6px);
+    }
+
+    .service:hover p {
+      color: #d8d8d8;
+    }
+
+    .service-number {
+      display: block;
+      margin-bottom: 54px;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .service h3 {
+      margin: 0 0 14px;
+      font-size: 26px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .service p {
+      margin: 0;
+      color: #303030;
+    }
+
+    .workbench {
+      display: grid;
+      grid-template-columns: 0.68fr 1fr;
+      gap: 36px;
+      align-items: start;
+    }
+
+    .process-list {
+      border-top: 1px solid var(--line);
+    }
+
+    .process-item {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 24px;
+      padding: 28px 0;
+      border-bottom: 1px solid var(--line);
+      transition: padding-left 220ms ease, border-color 220ms ease;
+    }
+
+    .process-item:hover {
+      padding-left: 18px;
+      border-color: rgba(255, 255, 255, 0.42);
+    }
+
+    .process-item span {
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .process-item h3 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      text-transform: uppercase;
+    }
+
+    .process-item p {
+      margin: 0;
+      color: #cfcfcf;
+    }
+
+    .code-panel {
+      border: 2px solid var(--white);
+      background: #0d0d0d;
+      box-shadow: 14px 14px 0 var(--white);
+      transition: transform 260ms ease, box-shadow 260ms ease;
+    }
+
+    .code-panel:hover {
+      transform: translate(-4px, -4px);
+      box-shadow: 22px 22px 0 var(--white);
+    }
+
+    .panel-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 54px;
+      padding: 0 18px;
+      border-bottom: 2px solid var(--white);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .terminal {
+      margin: 0;
+      padding: 26px;
+      min-height: 360px;
+      color: #f5f5f5;
+      white-space: pre-wrap;
+      font: 700 15px/1.75 "Courier New", monospace;
+    }
+
+    .terminal .type-line {
+      display: block;
+      width: 0;
+      max-width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      animation: typeLine 900ms steps(34, end) forwards;
+      animation-play-state: paused;
+    }
+
+    .terminal .type-line:nth-child(2) {
+      animation-delay: 150ms;
+    }
+
+    .terminal .type-line:nth-child(3) {
+      animation-delay: 300ms;
+    }
+
+    .terminal .type-line:nth-child(4) {
+      animation-delay: 450ms;
+    }
+
+    .terminal .type-line:nth-child(5) {
+      animation-delay: 600ms;
+    }
+
+    .terminal .type-line:nth-child(6) {
+      animation-delay: 850ms;
+    }
+
+    .terminal.is-visible .type-line {
+      animation-play-state: running;
+    }
+
+    .terminal .dim {
+      color: #8b8b8b;
+    }
+
+    .projects {
+      background: var(--soft);
+      color: var(--black);
+      position: relative;
+      padding: 112px 0;
+    }
+
+    .projects::before {
+      background: repeating-linear-gradient(90deg, var(--white) 0 18px, var(--black) 18px 36px);
+    }
+
+    .projects .section-heading {
+      align-items: start;
+    }
+
+    .projects .section-heading p {
+      color: #333;
+    }
+
+    .project-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #4a4a4a;
+    }
+
+    .project-meta strong {
+      color: var(--black);
+    }
+
+    .featured-carousel {
+      display: grid;
+      margin-bottom: 34px;
+      border: 2px solid var(--black);
+      background: var(--black);
+      color: var(--white);
+      box-shadow: 12px 12px 0 var(--black);
+      overflow: hidden;
+    }
+
+    .carousel-card {
+      display: none;
+      min-height: 280px;
+      padding: clamp(24px, 5vw, 52px);
+    }
+
+    .carousel-card.active {
+      display: block;
+    }
+
+    .carousel-card .featured-label {
+      margin: 0 0 14px;
+      color: var(--accent);
+      font: 900 12px/1.4 "Courier New", monospace;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .carousel-card h3 {
+      max-width: 820px;
+      margin: 0;
+      font-size: clamp(36px, 7vw, 78px);
+      line-height: 0.9;
+      text-transform: uppercase;
+    }
+
+    .carousel-card p {
+      max-width: 650px;
+      margin: 20px 0 28px;
+      color: #d8d8d8;
+      font-size: 18px;
+    }
+
+    .archive-empty {
+      padding: 28px;
+      border: 2px solid var(--black);
+      color: #333;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .category-group {
+      margin-top: 28px;
+    }
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 2px solid var(--black);
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .project-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: center;
+      padding: 30px 0;
+      border-top: 2px solid var(--black);
+      transition: padding-left 220ms ease, background 220ms ease;
+    }
+
+    .project-row:hover {
+      padding-left: 18px;
+      background: #e8e8e8;
+    }
+
+    .project-row:last-child {
+      border-bottom: 2px solid var(--black);
+    }
+
+    .p-title {
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      font-size: clamp(24px, 3.6vw, 48px);
+      font-weight: 900;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .p-desc {
+      max-width: 720px;
+      margin-top: 10px;
+      color: #393939;
+      font-size: 17px;
+    }
+
+    .badge,
+    .achievement-tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      background: var(--black);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .achievement-tag {
+      background: transparent;
+      color: #333;
+      border: 2px solid var(--black);
+    }
+
+    .btn-view {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 18px;
+      border: 2px solid currentColor;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font: 900 12px/1 Arial, Helvetica, sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: transform 180ms ease, background 180ms ease, color 180ms ease;
+      white-space: nowrap;
+    }
+
+    .btn-view:hover {
+      transform: translateY(-2px);
+      background: currentColor;
+    }
+
+    .btn-view:hover span {
+      color: var(--black);
+    }
+
+    .projects .project-row .btn-view:hover span {
+      color: var(--soft);
+    }
+
+    .cta {
+      padding: 112px 0;
+      text-align: center;
+    }
+
+    .contact-panel {
+      width: min(980px, 100%);
+      margin: 0 auto;
+      padding: clamp(32px, 6vw, 72px);
+      border: 2px solid var(--white);
+      text-align: left;
+      box-shadow: 18px 18px 0 var(--white);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .cta h2 {
+      max-width: 900px;
+      margin: 0;
+    }
+
+    .cta p {
+      max-width: 620px;
+      margin: 26px 0 34px;
+      color: #d0d0d0;
+      font-size: 19px;
+    }
+
+    .insta-handle {
+      display: inline-flex;
+      margin-bottom: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .contact-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .dm-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      margin-top: 36px;
+      background: var(--white);
+      border: 1px solid var(--white);
+    }
+
+    .dm-step {
+      min-height: 120px;
+      padding: 18px;
+      background: var(--black);
+    }
+
+    .dm-step strong {
+      display: block;
+      margin-bottom: 22px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .dm-step span {
+      display: block;
+      color: var(--white);
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1.15;
+      text-transform: uppercase;
+    }
+
+    .footer {
+      border-top: 1px solid var(--line);
+      padding: 28px 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    @keyframes loaderPulse {
+      from {
+        background: var(--black);
+        color: var(--white);
+        transform: translateY(0) rotate(0deg);
+      }
+      to {
+        background: var(--white);
+        color: var(--black);
+        transform: translateY(-6px) rotate(-2deg);
+      }
+    }
+
+    @keyframes loaderBar {
+      0% {
+        transform: scaleX(0);
+      }
+      72% {
+        transform: scaleX(0.82);
+      }
+      100% {
+        transform: scaleX(1);
+      }
+    }
+
+    @keyframes loaderBlink {
+      50% {
+        opacity: 0.35;
+      }
+    }
+
+    @keyframes navDrop {
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes riseIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes windowIn {
+      to {
+        opacity: 1;
+        transform: translateY(0) rotate(-1deg);
+      }
+    }
+
+    @keyframes lineIn {
+      to {
+        transform: scaleX(1);
+      }
+    }
+
+    @keyframes gridDrift {
+      to {
+        background-position: 72px 72px;
+      }
+    }
+
+    @keyframes typeLine {
+      to {
+        width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 1ms !important;
+      }
+    }
+
+    .footer-inner {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 900px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero,
+      .section-heading,
+      .workbench {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        gap: 34px;
+        padding-top: 112px;
+        align-content: center;
+      }
+
+      .hero-strip,
+      .service-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .service-number {
+        margin-bottom: 34px;
+      }
+
+      .dm-steps {
+        grid-template-columns: 1fr;
+      }
+
+      .project-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .project-row span {
+        justify-self: start;
+      }
+    }
+
+    @media (max-width: 620px) {
+      html {
+        scroll-padding-top: 64px;
+      }
+
+      .nav-inner {
+        min-height: 64px;
+        width: min(var(--max), calc(100% - 22px));
+        gap: 10px;
+      }
+
+      .brand {
+        gap: 8px;
+      }
+
+      .brand-mark {
+        width: 38px;
+        height: 38px;
+        border-width: 2px;
+        font-size: 14px;
+      }
+
+      .brand-name {
+        display: inline-flex;
+        max-width: 92px;
+        overflow: hidden;
+        font-size: 13px;
+      }
+
+      .nav-cta {
+        min-height: 42px;
+        padding: 0 12px;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+      }
+
+      .hero,
+      section {
+        padding-top: 82px;
+        padding-bottom: 54px;
+      }
+
+      .hero {
+        width: min(var(--max), calc(100% - 22px));
+        grid-template-columns: 1fr;
+        gap: 22px;
+      }
+
+      .eyebrow {
+        margin-bottom: 16px;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+      }
+
+      .eyebrow::before {
+        width: 30px;
+        height: 2px;
+      }
+
+      h1 {
+        font-size: clamp(48px, 17vw, 72px);
+        line-height: 0.88;
+      }
+
+      .hero-text {
+        margin-top: 18px;
+        font-size: 16px;
+        line-height: 1.45;
+      }
+
+      .hero-note {
+        margin-top: 12px;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .hero-actions {
+        margin-top: 22px;
+        gap: 10px;
+      }
+
+      .outlined {
+        -webkit-text-stroke-width: 1px;
+        text-stroke-width: 1px;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+      }
+
+      .button {
+        width: 100%;
+        min-height: 50px;
+      }
+
+      .hero-strip,
+      .service-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-strip {
+        gap: 8px;
+        border: 0;
+        background: transparent;
+      }
+
+      .stat {
+        min-height: 64px;
+        display: grid;
+        grid-template-columns: 52px 1fr;
+        align-items: center;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+      }
+
+      .stat strong {
+        font-size: 22px;
+      }
+
+      .stat span {
+        margin-top: 0;
+      }
+
+      .stat,
+      .service {
+        border-right: 0;
+      }
+
+      .section-inner {
+        width: min(var(--max), calc(100% - 22px));
+      }
+
+      .section-heading {
+        gap: 18px;
+        margin-bottom: 28px;
+      }
+
+      h2 {
+        font-size: clamp(38px, 14vw, 56px);
+        line-height: 0.92;
+      }
+
+      .section-heading p,
+      .process-item p,
+      .service p,
+      .project-row span,
+      .cta p {
+        font-size: 15px;
+        line-height: 1.45;
+      }
+
+      .service {
+        min-height: auto;
+        padding: 22px;
+      }
+
+      .service-number {
+        margin-bottom: 34px;
+        font-size: 12px;
+      }
+
+      .service h3,
+      .process-item h3 {
+        font-size: 24px;
+      }
+
+      .process-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 22px 0;
+      }
+
+      .logo-window {
+        border-width: 5px;
+        box-shadow: 12px 12px 0 var(--black), 12px 12px 0 1px var(--white);
+        order: -1;
+        max-width: 330px;
+        margin: 0 auto 4px;
+      }
+
+      .logo-window img {
+        padding: 44px 12px 16px;
+      }
+
+      .window-controls {
+        top: 10px;
+        right: 10px;
+        gap: 8px;
+      }
+
+      .window-controls span {
+        width: 18px;
+        height: 16px;
+        font-size: 20px;
+      }
+
+      .window-controls .box {
+        width: 18px;
+        height: 18px;
+      }
+
+      .logo-caption {
+        padding: 10px 12px;
+        font-size: 10px;
+      }
+
+      .terminal {
+        min-height: auto;
+        padding: 20px;
+        font-size: 13px;
+      }
+
+      .terminal .type-line {
+        white-space: normal;
+      }
+
+      .contact-panel {
+        padding: 28px 20px;
+        box-shadow: 10px 10px 0 var(--white);
+      }
+
+      .contact-actions {
+        flex-direction: column;
+      }
+
+      .dm-steps {
+        margin-top: 28px;
+      }
+
+      .dm-step {
+        min-height: auto;
+        padding: 16px;
+      }
+
+      .dm-step strong {
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+<body class="is-loading">
+  <div class="site-loader" aria-label="Loading website" role="status">
+    <div class="loader-card">
+      <div class="loader-top">
+        <span>devs.exe</span>
+        <span class="loader-status">booting</span>
+      </div>
+      <div class="loader-body">
+        <div class="loader-logo" aria-hidden="true">EXE</div>
+        <h2 class="loader-title">Loading Website</h2>
+        <p class="loader-text">&gt; compiling idea<br>&gt; preparing interface<br>&gt; launching experience</p>
+        <div class="loader-bar" aria-hidden="true"><span></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="page-shell">
+    <header class="nav">
+      <div class="nav-inner">
+        <a class="brand" href="#top" aria-label="devs.exe home">
+          <span class="brand-mark">EXE</span>
+          <span class="brand-name">devs.exe</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary navigation">
+          <a href="#services">Services</a>
+          <a href="#process">Process</a>
+          <a href="#work">Work</a>
+        </nav>
+        <a class="nav-cta" href="#contact">Contact Us</a>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-label="devs.exe landing page">
+        <div class="hero-copy">
+          <div class="eyebrow">Websites that make your brand look serious</div>
+          <h1>
+            Websites
+            <span class="outlined">That Run</span>
+          </h1>
+          <p class="hero-text">
+            devs.exe designs and develops sharp websites for founders, shops,
+            creators, and growing teams that need a clean online presence.
+          </p>
+          <p class="hero-note">Strategy, design, development, launch, and support in one focused build.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#contact">Start With a DM</a>
+            <a class="button secondary" href="#services">View Services</a>
+          </div>
+        </div>
+
+        <div class="logo-window" aria-label="Company logo preview">
+          <div class="window-controls" aria-hidden="true">
+            <span>-</span>
+            <span class="box"></span>
+            <span>x</span>
+          </div>
+          <img src="assets/Devs.png" alt="devs.exe logo" />
+          <div class="logo-caption">
+            <span>devs.exe</span>
+            <span>ready to run</span>
+          </div>
+        </div>
+
+        <div class="hero-strip" aria-label="Company highlights">
+          <div class="stat">
+            <strong>01</strong>
+            <span>Custom sites</span>
+          </div>
+          <div class="stat">
+            <strong>02</strong>
+            <span>Fast delivery</span>
+          </div>
+          <div class="stat">
+            <strong>03</strong>
+            <span>Mobile first</span>
+          </div>
+          <div class="stat">
+            <strong>04</strong>
+            <span>Launch support</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="services reveal" id="services">
+        <div class="section-inner">
+          <div class="section-heading">
+            <h2>What We Build</h2>
+            <p>
+              Clean pages, strong structure, and practical systems for businesses that
+              need their website to sell, explain, book, or launch.
+            </p>
+          </div>
+
+          <div class="service-grid">
+            <article class="service reveal" style="--delay: 40ms">
+              <span class="service-number">01 / Strategy</span>
+              <h3>Landing Pages</h3>
+              <p>Bold one-page websites made to introduce your offer and convert visitors into clients.</p>
+            </article>
+            <article class="service reveal" style="--delay: 110ms">
+              <span class="service-number">02 / Build</span>
+              <h3>Business Sites</h3>
+              <p>Complete multi-section websites with services, portfolios, forms, and clear calls to action.</p>
+            </article>
+            <article class="service reveal" style="--delay: 180ms">
+              <span class="service-number">03 / Commerce</span>
+              <h3>Online Stores</h3>
+              <p>Product-focused storefronts with clean layouts, fast browsing, and smooth checkout paths.</p>
+            </article>
+            <article class="service reveal" style="--delay: 40ms">
+              <span class="service-number">04 / Identity</span>
+              <h3>Web Design</h3>
+              <p>Black-and-white, minimal, premium, or expressive interfaces that match your brand.</p>
+            </article>
+            <article class="service reveal" style="--delay: 110ms">
+              <span class="service-number">05 / Systems</span>
+              <h3>Dashboards</h3>
+              <p>Private portals, booking tools, admin panels, and workflows for teams that need control.</p>
+            </article>
+            <article class="service reveal" style="--delay: 180ms">
+              <span class="service-number">06 / Launch</span>
+              <h3>Support</h3>
+              <p>Deployment, fixes, edits, and improvements after the first version goes live.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="reveal" id="process">
+        <div class="section-inner workbench">
+          <div>
+            <div class="eyebrow">From brief to browser</div>
+            <h2>How We Ship</h2>
+          </div>
+
+          <div class="process-list">
+            <article class="process-item reveal" style="--delay: 40ms">
+              <span>01</span>
+              <div>
+                <h3>Map the idea</h3>
+                <p>We define the pages, sections, goals, audience, and the clearest path for visitors.</p>
+              </div>
+            </article>
+            <article class="process-item reveal" style="--delay: 100ms">
+              <span>02</span>
+              <div>
+                <h3>Design the interface</h3>
+                <p>Your site gets a focused visual direction with strong hierarchy and responsive layouts.</p>
+              </div>
+            </article>
+            <article class="process-item reveal" style="--delay: 160ms">
+              <span>03</span>
+              <div>
+                <h3>Develop the site</h3>
+                <p>We turn the design into a fast, polished website that works across devices.</p>
+              </div>
+            </article>
+            <article class="process-item reveal" style="--delay: 220ms">
+              <span>04</span>
+              <div>
+                <h3>Launch and refine</h3>
+                <p>We publish, test, adjust, and help you keep improving after the site is live.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="reveal">
+        <div class="section-inner">
+          <div class="code-panel" aria-label="Code preview">
+            <div class="panel-top">
+              <span>devs.exe</span>
+              <span>build status: ready</span>
+            </div>
+            <pre class="terminal"><span class="type-line"><span class="dim">&gt;</span> idea received</span>
+<span class="type-line"><span class="dim">&gt;</span> structure planned</span>
+<span class="type-line"><span class="dim">&gt;</span> interface designed</span>
+<span class="type-line"><span class="dim">&gt;</span> responsive code compiled</span>
+<span class="type-line"><span class="dim">&gt;</span> website launched</span>
+
+<span class="type-line"><span class="dim">output:</span> a clean digital presence built for your next client, customer, or launch.</span></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="projects reveal" id="work">
+        <div class="section-inner">
+          <div class="section-heading">
+            <div>
+              <div class="project-meta">Archive contains <strong id="project-count">0</strong> entries</div>
+              <h2>Our Previous Projects</h2>
+            </div>
+            <p>Real builds, experiments, achievements, and client-ready work grouped straight from the project archive.</p>
+          </div>
+
+          <div class="featured-carousel" id="carousel-container" aria-live="polite">
+            <div class="carousel-card active">
+              <p class="featured-label">Loading archive //</p>
+              <h3>Fetching projects</h3>
+              <p>Connecting to Firebase and preparing the previous project list.</p>
+            </div>
+          </div>
+
+          <div id="categorized-archive" aria-label="Previous project archive">
+            <div class="archive-empty">Loading previous projects...</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta reveal" id="contact">
+        <div class="section-inner">
+          <div class="contact-panel">
+            <span class="insta-handle">@devs.exe</span>
+            <h2>Send the idea. We will take it from there.</h2>
+            <p>
+              DM devs.exe on Instagram with your business name, what you need,
+              and any references you like. We will reply there and start shaping
+              the website.
+            </p>
+            <div class="contact-actions">
+              <a class="button primary" href="https://www.instagram.com/devs_exe_eg?igsh=MWVibzc2NW8wbDNpYg==" target="_blank" rel="noreferrer">Open Instagram Chat</a>
+            </div>
+            <div class="dm-steps" aria-label="What to send in the Instagram chat">
+              <div class="dm-step">
+                <strong>01</strong>
+                <span>Your business name</span>
+              </div>
+              <div class="dm-step">
+                <strong>02</strong>
+                <span>What the site should do</span>
+              </div>
+              <div class="dm-step">
+                <strong>03</strong>
+                <span>Any style references</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <span>devs.exe</span>
+        <span>Your idea. Our code. Done.</span>
+      </div>
+    </footer>
+  </div>
+  <script>
+    const finishLoader = () => {
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const delay = reduceMotion ? 120 : 1900;
+
+      window.setTimeout(() => {
+        document.body.classList.add("loader-done", "site-ready");
+        document.body.classList.remove("is-loading");
+      }, delay);
+    };
+
+    if (document.readyState === "complete") {
+      finishLoader();
+    } else {
+      window.addEventListener("load", finishLoader, { once: true });
+    }
+
+    const nav = document.querySelector(".nav");
+    const logoWindow = document.querySelector(".logo-window");
+    const revealItems = document.querySelectorAll(".reveal");
+    const terminal = document.querySelector(".terminal");
+
+    const updateNav = () => {
+      nav.classList.toggle("is-scrolled", window.scrollY > 24);
+    };
+
+    updateNav();
+    window.addEventListener("scroll", updateNav, { passive: true });
+
+    if (logoWindow && window.matchMedia("(pointer: fine)").matches) {
+      logoWindow.addEventListener("mousemove", (event) => {
+        const rect = logoWindow.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width - 0.5;
+        const y = (event.clientY - rect.top) / rect.height - 0.5;
+        logoWindow.style.transform = `translateY(-8px) rotateX(${y * -5}deg) rotateY(${x * 5}deg)`;
+      });
+
+      logoWindow.addEventListener("mouseleave", () => {
+        logoWindow.style.transform = "";
+      });
+    }
+
+    // Use IntersectionObserver when available, otherwise fall back to
+    // immediately revealing content so mobile browsers that block or
+    // don't support observers still show the section.
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.16 });
+
+      revealItems.forEach((item) => observer.observe(item));
+
+      if (terminal) {
+        const terminalObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              terminal.classList.add("is-visible");
+              terminalObserver.unobserve(terminal);
+            }
+          });
+        }, { threshold: 0.35 });
+
+        terminalObserver.observe(terminal);
+      }
+    } else {
+      // Not supported: reveal everything immediately
+      revealItems.forEach((item) => item.classList.add('is-visible'));
+      if (terminal) terminal.classList.add('is-visible');
+    }
+
+    // Time-based fallback: if observer didn't fire (e.g. blocked by browser
+    // policies), ensure elements become visible after a short delay.
+    setTimeout(() => {
+      const anyVisible = Array.from(revealItems).some(i => i.classList.contains('is-visible'));
+      if (!anyVisible) {
+        revealItems.forEach((item) => item.classList.add('is-visible'));
+        if (terminal) terminal.classList.add('is-visible');
+      }
+    }, 1200);
+  </script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-lite.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBLax7KEZwnzyat6GD71hk6EWGqkqbuBIs",
+      authDomain: "protifolio-48bc7.firebaseapp.com",
+      projectId: "protifolio-48bc7",
+      storageBucket: "protifolio-48bc7.firebasestorage.app",
+      messagingSenderId: "843266390951",
+      appId: "1:843266390951:web:20c7c208ca2aee0758d482"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const escapeHTML = (value = "") => String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+    const getSafeLink = (value) => {
+      if (!value) return "";
+      const link = String(value).trim();
+
+      if (!link) return "";
+      if (/^[a-z][a-z0-9+.-]*:/i.test(link) && !/^https?:/i.test(link)) return "";
+      if (!/^[a-z][a-z0-9+.-]*:/i.test(link)) return escapeHTML(link);
+
+      try {
+        const url = new URL(link, window.location.href);
+        return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+      } catch {
+        return escapeHTML(link);
+      }
+    };
+
+    const startCarousel = () => {
+      const cards = document.querySelectorAll(".carousel-card");
+      if (cards.length < 2) return;
+
+      let current = 0;
+      window.setInterval(() => {
+        cards[current].classList.remove("active");
+        current = (current + 1) % cards.length;
+        cards[current].classList.add("active");
+      }, 4200);
+    };
+
+    async function fetchProjects() {
+      const archiveContainer = document.getElementById("categorized-archive");
+      const carousel = document.getElementById("carousel-container");
+      const counterDisplay = document.getElementById("project-count");
+
+      if (!archiveContainer || !carousel || !counterDisplay) return;
+
+      try {
+        const querySnapshot = await getDocs(collection(db, "projects"));
+
+        let count = 0;
+        let featuredAdded = 0;
+        const categorizedData = {};
+        let carouselHTML = "";
+
+        querySnapshot.forEach((doc) => {
+          const p = doc.data();
+          count++;
+
+          const categoryName = p.category ? String(p.category).toUpperCase() : "ARCHIVE_LOGS";
+          const title = escapeHTML(p.title || "Untitled Project");
+          const desc = escapeHTML(p.desc || p.description || "No description added yet.");
+          const link = getSafeLink(p.link);
+
+          if (!categorizedData[categoryName]) {
+            categorizedData[categoryName] = [];
+          }
+
+          categorizedData[categoryName].push({ ...p, title, desc, link });
+
+          if (p.featured) {
+            carouselHTML += `
+              <div class="carousel-card ${featuredAdded === 0 ? "active" : ""}">
+                <p class="featured-label">Featured entry // ${escapeHTML(categoryName)}</p>
+                <h3>${title}</h3>
+                <p>${desc}</p>
+                ${link ? `<a class="btn-view" href="${link}" target="_blank" rel="noreferrer"><span>View Source</span></a>` : ""}
+              </div>
+            `;
+            featuredAdded++;
+          }
+        });
+
+        counterDisplay.textContent = count;
+
+        if (featuredAdded > 0) {
+          carousel.innerHTML = carouselHTML;
+          startCarousel();
+        } else {
+          carousel.innerHTML = `
+            <div class="carousel-card active">
+              <p class="featured-label">Archive ready //</p>
+              <h3>${count ? "Previous work loaded" : "No projects yet"}</h3>
+              <p>${count ? "Add a featured flag in Firebase to promote a project here." : "Add projects to Firebase and they will appear here automatically."}</p>
+            </div>
+          `;
+        }
+
+        if (!count) {
+          archiveContainer.innerHTML = `<div class="archive-empty">No previous projects found yet.</div>`;
+          return;
+        }
+
+        archiveContainer.innerHTML = "";
+
+        for (const [category, projects] of Object.entries(categorizedData)) {
+          let groupHTML = `
+            <div class="category-group">
+              <div class="category-header">
+                <span>${escapeHTML(category)}</span>
+                <span style="color:var(--accent)">[${projects.length}]</span>
+              </div>
+          `;
+
+          projects.forEach((p) => {
+            const pcBadge = p.pc ? `<span class="badge">PC_ONLY</span>` : "";
+            const bestBadge = p.featured ? `<span class="badge" style="background:white; color:black; border:2px solid black;">FEATURED</span>` : "";
+            const actionHTML = p.link
+              ? `<a class="btn-view" href="${p.link}" target="_blank" rel="noreferrer"><span>Execute</span></a>`
+              : `<span class="achievement-tag">Achievement Unlocked</span>`;
+
+            groupHTML += `
+              <div class="project-row">
+                <div>
+                  <div class="p-title">${p.title} ${bestBadge} ${pcBadge}</div>
+                  <div class="p-desc">${p.desc}</div>
+                </div>
+                <div>${actionHTML}</div>
+              </div>
+            `;
+          });
+
+          groupHTML += `</div>`;
+          archiveContainer.insertAdjacentHTML("beforeend", groupHTML);
+        }
+      } catch (error) {
+        console.error("Project archive failed to load:", error);
+        carousel.innerHTML = `
+          <div class="carousel-card active">
+            <p class="featured-label">Archive offline //</p>
+            <h3>Projects unavailable</h3>
+            <p>Check the Firebase config, Firestore rules, and the projects collection name.</p>
+          </div>
+        `;
+        archiveContainer.innerHTML = `<div class="archive-empty">Could not load previous projects.</div>`;
+      }
+    }
+
+    fetchProjects();
+  </script>
+</body>
+</html>
